@@ -29,20 +29,35 @@ int server(){
   bind(server_fd, (struct sockaddr *)&address, sizeof(address));
   char ch[100];
   while(1){
-    /*listen(server_fd, 3);
+    listen(server_fd, 5);
     new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+    cout<<"Received";
     valread = read( new_socket , buffer, 1024);
-    cout<<endl<<buffer;*/
+    cout<<"Here:"<<endl<<buffer;
+
   }
+  /*struct sockaddr_in address;
+  int sock = 0, valread;
+  struct sockaddr_in serv_addr;
+  char buffer[1024] = {0};
+  sock = socket(AF_INET, SOCK_STREAM, 0);
+  memset(&serv_addr, '0', sizeof(serv_addr));
+
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(PORT);
+
+  inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+  connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+  recv(sock, buffer, 100, 0);*/
   return 0;
 }
 
 int client(){
   while(1){
-    char ha[100];
+    char ha[] = "alice.cpp";
     cout<<">>";
-    /*cin>>ha;
-    struct sockaddr_in address;
+    //cin>>ha;
+    /*struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
@@ -57,26 +72,28 @@ int client(){
     send(sock , ha , strlen(ha) , 0 );*/
 
     cin>>ha;
+
     struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
     sock = socket(AF_INET, SOCK_STREAM, 0);
     memset(&serv_addr, '0', sizeof(serv_addr));
-
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT2);
-
     inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
-    //connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    cout<< connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     //send(sock , ha , strlen(ha) , 0 );
     int LENGTH = 100;
     char sdbuf[LENGTH];
     FILE *fs = fopen(ha, "r");
     bzero(sdbuf, LENGTH);
     int fs_block_sz;
+    cout<<ha<<endl;
     while((fs_block_sz = fread(sdbuf, sizeof(char), LENGTH, fs)) > 0 ){
+      cout<<fs_block_sz<<endl;
       send(sock, sdbuf, fs_block_sz, 0);
+      cout<<"Sent"<<endl;
       bzero(sdbuf, LENGTH);
     }
     cout<< "Sent!";
