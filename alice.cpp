@@ -6,7 +6,11 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include<string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include<string>
+#include <sys/sendfile.h>
+
 int PORT = 8080;
 int PORT2 = 8081;
 
@@ -86,16 +90,19 @@ int client(){
     //send(sock , ha , strlen(ha) , 0 );
     int LENGTH = 100;
     char sdbuf[LENGTH];
-    FILE *fs = fopen(ha, "r");
+    //FILE *fs = fopen(ha, "r");
+    int fs;
+    fs = open(ha, O_RDONLY);
     bzero(sdbuf, LENGTH);
     int fs_block_sz;
     cout<<ha<<endl;
-    while((fs_block_sz = fread(sdbuf, sizeof(char), LENGTH, fs)) > 0 ){
+    /*while((fs_block_sz = fread(sdbuf, sizeof(char), LENGTH, fs)) > 0 ){
       cout<<fs_block_sz<<endl;
       send(sock, sdbuf, fs_block_sz, 0);
       cout<<"Sent"<<endl;
       bzero(sdbuf, LENGTH);
-    }
+    }*/
+    sendfile(sock, fs, NULL, 100);
     cout<< "Sent!";
   }
   return 0;
