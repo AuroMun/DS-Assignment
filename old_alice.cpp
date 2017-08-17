@@ -10,7 +10,7 @@
 int PORT = 8080;
 int PORT2 = 8081;
 int accpt = 0;
-
+#define LENGTH 100024
 
 using namespace std;
 
@@ -20,7 +20,7 @@ int server(){
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = {0};
+    char buffer[LENGTH] = {0};
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,  &opt, sizeof(opt));
 
@@ -31,11 +31,26 @@ int server(){
     bind(server_fd, (struct sockaddr *)&address, sizeof(address));
     char ch[100];
     listen(server_fd, 1);
-    fprintf(stdout, "Waiting for connection\n");
     while((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))>0){
-    fprintf(stdout, "Accepted connection on port: %d\n", PORT);
+      fprintf(stdout, "Accepting connection\n");
     valread = read( new_socket , buffer, 1024);
     fprintf(stdout, "%s\n>>", buffer);
+    char fname[] = "new.txt";
+    FILE *fr = fopen(buffer, "wb");
+    bzero(buffer, LENGTH);
+    int fr_block_sz = 0;
+    while(1)
+    {
+      fr_block_sz = recv(new_socket, buffer, LENGTH, 0);
+      if(fr_block_sz > 0){
+        int write_sz = fwrite(buffer, sizeof(char), fr_block_sz, fr);
+        //printf("%s\n", buffer);
+        bzero(buffer, LENGTH);
+      }
+      else break;
+    }
+    fprintf(stdout, "Received file, wrote to %s ", fname);
+    fclose(fr);
     close(new_socket);
   }
   return 0;
@@ -47,21 +62,26 @@ int client(){
     char ha[100];
     cout<<">>";
     cin>>ha;
+    fprintf(stdout, "Sending file %s \n", ha);
     struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
-    char buffer[1024] = {0};
+    char buffer[LENGTH] = {0};
     sock = socket(AF_INET, SOCK_STREAM, 0);
     memset(&serv_addr, '0', sizeof(serv_addr));
-
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT2);
-
     inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
-    fprintf(stdout, "Beginning to connect\n");
     connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     send(sock , ha , strlen(ha) , 0 );
-    fprintf(stdout, " Sent!\n");
+    int fs_block_sz;
+    FILE *fp = fopen(ha, "r");
+    bzero(buffer, LENGTH);
+    while((fs_block_sz = fread(buffer, sizeof(char), LENGTH, fp)) > 0)
+    {
+      if(send(sock, buffer, fs_block_sz, 0) < 0);
+      bzero(buffer, LENGTH);
+    }
     close(sock);
   }
   return 0;
