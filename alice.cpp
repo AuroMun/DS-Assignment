@@ -16,12 +16,22 @@ int PORT2 = 8081;
 
 using namespace std;
 
+int myAtoi(char *str){
+  int res = 0;
+  for(int i=0; str[i]!='\0'; ++i)
+    res = res*10 + str[i]-'0';
+  return res;
+}
 int server(){
   int server_fd, new_socket, valread;
   struct sockaddr_in address;
-  int opt = 1;
+  int opt = 1, file_size=0, remain_data = 0;
   int addrlen = sizeof(address);
-  char buffer[1024] = {0};
+  ssize_t len;
+  char ch[100];
+  char buffer[1024];
+
+  FILE *received_file;
 
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,  &opt, sizeof(opt));
@@ -31,15 +41,29 @@ int server(){
   address.sin_port = htons( PORT );
 
   bind(server_fd, (struct sockaddr *)&address, sizeof(address));
-  char ch[100];
-  while(1){
-    listen(server_fd, 5);
-    new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-    cout<<"Received";
-    valread = read( new_socket , buffer, 1024);
-    cout<<"Here:"<<endl<<buffer;
 
-  }
+  listen(server_fd, 5);
+  new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+  recv(new_socket, buffer, BUFSIZ, 0);
+  cout<<buffer<<"..."<<endl;
+  file_size =  myAtoi(buffer);
+  //received_file = fopen("test.c", "w");
+  remain_data = file_size;
+  cout<<file_size<<endl;
+  //while(((len = recv(new_socket, buffer, BUFSIZ, 0)) > 0) && (remain_data > 0)){
+    //fwrite(buffer, sizeof(char), len, received_file);
+    //cout<<"Hello"<<endl;
+    //remain_data -= len;
+    //fprintf(stdout, "Receive %d bytes, waiting for %d\n", len, remain_data);
+  //}
+  cout<<"Hey";
+  //fclose(received_file);
+  close(new_socket);
+    //cout<<"Received";//cout<<"Received";
+    //valread = read( new_socket , buffer, 1024);
+    //cout<<"Here:"<<endl<<buffer;
+    //valread = read( new_socket , buffer, 1024);
+    //cout<<"Here:"<<endl<<buffer;
   /*struct sockaddr_in address;
   int sock = 0, valread;
   struct sockaddr_in serv_addr;
@@ -102,7 +126,20 @@ int client(){
       cout<<"Sent"<<endl;
       bzero(sdbuf, LENGTH);
     }*/
-    sendfile(sock, fs, NULL, 100);
+    ssize_t len;
+    int sent_bytes = 0;
+    long int offset = 0;
+    char file_size[256];
+    //long int BUFSIZ = 100;
+    struct stat file_stat;
+    fstat(fs, &file_stat);
+    sprintf(file_size, "%d", file_stat.st_size);
+    int remain_data = file_stat.st_size;
+    len = send(sock, file_size, sizeof(file_size), 0);
+    while(((sent_bytes = sendfile(sock, fs, &offset, BUFSIZ)) > 0 )&& (remain_data >0)){
+      remain_data -= sent_bytes;
+    }
+    close(sock);
     cout<< "Sent!";
   }
   return 0;
