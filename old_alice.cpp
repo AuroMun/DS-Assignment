@@ -29,29 +29,42 @@ int server(){
     address.sin_port = htons( PORT );
 
     bind(server_fd, (struct sockaddr *)&address, sizeof(address));
-    char ch[100];
-    listen(server_fd, 1);
+    char ch[LENGTH];
+    char *fw;
+    char *sname;
+    listen(server_fd, 5);
     while((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))>0){
       fprintf(stdout, "Accepting connection\n");
     valread = read( new_socket , buffer, 1024);
-    fprintf(stdout, "%s\n>>", buffer);
-    char fname[] = "new.txt";
-    FILE *fr = fopen(buffer, "wb");
-    bzero(buffer, LENGTH);
-    int fr_block_sz = 0;
-    while(1)
-    {
-      fr_block_sz = recv(new_socket, buffer, LENGTH, 0);
-      if(fr_block_sz > 0){
-        int write_sz = fwrite(buffer, sizeof(char), fr_block_sz, fr);
-        //printf("%s\n", buffer);
-        bzero(buffer, LENGTH);
-      }
-      else break;
+    fw = strtok(buffer, " ");
+    //cout<<fw<<endl;
+    if(!strstr(fw, "Sending")){
+      fprintf(stdout, "Message: %s\n>>", buffer);
+      bzero(buffer, strlen(buffer));
     }
-    fprintf(stdout, "Received file, wrote to %s ", fname);
-    fclose(fr);
+    else{
+      sname = strtok(0, " ");
+      fprintf(stdout, "Receiving file %s\n>>", sname);
+      char fname[] = "new.txt";
+      FILE *fr = fopen(fname, "wb");
+      bzero(buffer, LENGTH);
+      int fr_block_sz = 0;
+
+      while(1)
+      {
+        fr_block_sz = recv(new_socket, buffer, LENGTH, 0);
+        if(fr_block_sz > 0){
+          int write_sz = fwrite(buffer, sizeof(char), fr_block_sz, fr);
+          //printf("%s\n", buffer);
+          bzero(buffer, LENGTH);
+        }
+        else break;
+      }
+      fprintf(stdout, "Received file, wrote to %s ", fname);
+      fclose(fr);
+    }
     close(new_socket);
+    fprintf(stdout, "Closed connection\n");
   }
   return 0;
 }
@@ -59,28 +72,45 @@ int server(){
 int client(){
   if(accpt==0)return 0;
   while(1){
-    char ha[100];
+    char ha[LENGTH];
     cout<<">>";
-    cin>>ha;
-    fprintf(stdout, "Sending file %s \n", ha);
+
     struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
+    char *sname;
     char buffer[LENGTH] = {0};
     sock = socket(AF_INET, SOCK_STREAM, 0);
     memset(&serv_addr, '0', sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT2);
     inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+    cin>>ha;
+    fprintf(stdout, "Ha: %s\n", ha);
     connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-    send(sock , ha , strlen(ha) , 0 );
+
+    //send(sock , ha , strlen(ha) , 0 );
     int fs_block_sz;
-    FILE *fp = fopen(ha, "r");
-    bzero(buffer, LENGTH);
-    while((fs_block_sz = fread(buffer, sizeof(char), LENGTH, fp)) > 0)
-    {
-      if(send(sock, buffer, fs_block_sz, 0) < 0);
+    char *fw;
+    //fw = strtok(ha, " ");
+    //if(!strstr(fw, "Sending")){
+    if(1){
+        send(sock, ha, strlen(ha), 0);
+        bzero(ha, strlen(ha));
+        fprintf(stdout, "Sent a message! %s\n ", ha);
+        close(sock);
+        fprintf(stdout, "Closed connection\n");
+    }
+    else{
+      //sname = strtok(0, " ");
+      FILE *fp = fopen(ha, "r");
       bzero(buffer, LENGTH);
+
+      while((fs_block_sz = fread(buffer, sizeof(char), LENGTH, fp)) > 0)
+      {
+        if(send(sock, buffer, fs_block_sz, 0) < 0);
+        bzero(buffer, LENGTH);
+      }
     }
     close(sock);
   }
