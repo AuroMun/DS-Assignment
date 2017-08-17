@@ -56,7 +56,6 @@ int server(){
   client_socket = socket(AF_INET, SOCK_STREAM, 0);
   connect(client_socket, (struct sockaddr *)&remote_addr, sizeof(struct sockaddr));
   recv(client_socket, buffer, BUFSIZ, 0);
-  fprintf("Buffer size: %d", buffer, 0);
   //cout<<buffer<<endl;
   //recv(client_socket, buff, BUFSIZ, 0);
   //cout<<buff;
@@ -125,11 +124,11 @@ int client(){
 int main(int argc, char const *argv[]){
   PORT = atoi(argv[1]);
   PORT2 = atoi(argv[2]);
-  //cin>>FILE_TO_SEND;
+  cin>>FILE_TO_SEND;
   //thread first(server);
   //thread second(client);
   //first.join();
   //second.join();
-  server();
+  client();
   return 0;
 }

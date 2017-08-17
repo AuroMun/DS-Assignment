@@ -12,7 +12,7 @@
 
 #define PORT_NUMBER     8000
 #define SERVER_ADDRESS  "127.0.0.1"
-#define FILENAME        "/home/toc/foo.c"
+#define FILENAME        "bob.c"
 
 int main(int argc, char **argv)
 {
@@ -33,21 +33,9 @@ int main(int argc, char **argv)
         remote_addr.sin_port = htons(PORT_NUMBER);
 
         /* Create client socket */
-        client_socket = socket(AF_INET, SOCK_STREAM, 0);
-        if (client_socket == -1)
-        {
-                fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
-
-                exit(EXIT_FAILURE);
-        }
-
+        client_socket = socket(AF_INET, SOCK_STREAM, 0);/
         /* Connect to the server */
-        if (connect(client_socket, (struct sockaddr *)&remote_addr, sizeof(struct sockaddr)) == -1)
-        {
-                fprintf(stderr, "Error on connect --> %s\n", strerror(errno));
-
-                exit(EXIT_FAILURE);
-        }
+        connect(client_socket, (struct sockaddr *)&remote_addr, sizeof(struct sockaddr));
 
         /* Receiving file size */
         recv(client_socket, buffer, BUFSIZ, 0);
@@ -55,13 +43,6 @@ int main(int argc, char **argv)
         //fprintf(stdout, "\nFile size : %d\n", file_size);
 
         received_file = fopen(FILENAME, "w");
-        if (received_file == NULL)
-        {
-                fprintf(stderr, "Failed to open file foo --> %s\n", strerror(errno));
-
-                exit(EXIT_FAILURE);
-        }
-
         remain_data = file_size;
 
         while (((len = recv(client_socket, buffer, BUFSIZ, 0)) > 0) && (remain_data > 0))
