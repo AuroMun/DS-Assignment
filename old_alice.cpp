@@ -34,9 +34,11 @@ int server(){
     char *sname;
     listen(server_fd, 5);
     while((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))>0){
-      fprintf(stdout, "Accepting connection\n");
+      //fprintf(stdout, "Accepting connection\n");
     valread = read( new_socket , buffer, 1024);
-    fw = strtok(buffer, " ");
+    fw = strtok(buffer, ":");
+    char fname[] = "/home/doodledron/Documents/Academics/DS/new.txt";
+    FILE *fr = fopen(fname, "w");
     //cout<<fw<<endl;
     if(!strstr(fw, "Sending")){
       fprintf(stdout, "Message: %s\n>>", buffer);
@@ -45,26 +47,30 @@ int server(){
     else{
       sname = strtok(0, " ");
       fprintf(stdout, "Receiving file %s\n>>", sname);
-      char fname[] = "new.txt";
-      FILE *fr = fopen(fname, "wb");
+
       bzero(buffer, LENGTH);
       int fr_block_sz = 0;
+      if(!fr){
+        fprintf(stdout, "LOSER \n");
+      }
+      else cout<<fr<<endl;
 
       while(1)
       {
         fr_block_sz = recv(new_socket, buffer, LENGTH, 0);
         if(fr_block_sz > 0){
           int write_sz = fwrite(buffer, sizeof(char), fr_block_sz, fr);
-          //printf("%s\n", buffer);
+          printf("%s\n", buffer);
           bzero(buffer, LENGTH);
         }
         else break;
       }
-      fprintf(stdout, "Received file, wrote to %s ", fname);
+      fprintf(stdout, "Received file, wrote to %s \n", fname);
       fclose(fr);
+      fprintf(stdout, "Closed file %s\n", fname);
     }
     close(new_socket);
-    fprintf(stdout, "Closed connection\n");
+    //fprintf(stdout, "Closed connection\n");
   }
   return 0;
 }
@@ -89,21 +95,23 @@ int client(){
     fprintf(stdout, "Ha: %s\n", ha);
     connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
 
-    //send(sock , ha , strlen(ha) , 0 );
+    send(sock , ha , strlen(ha) , 0 );
     int fs_block_sz;
     char *fw;
-    //fw = strtok(ha, " ");
-    //if(!strstr(fw, "Sending")){
-    if(1){
-        send(sock, ha, strlen(ha), 0);
+    fw = strtok(ha, ":");
+    if(!strstr(fw, "Sending")){
+    //if(1){
+        //send(sock, ha, strlen(ha), 0);
         bzero(ha, strlen(ha));
-        fprintf(stdout, "Sent a message! %s\n ", ha);
+        //fprintf(stdout, "Sent a message! %s\n ", ha);
         close(sock);
-        fprintf(stdout, "Closed connection\n");
+        //fprintf(stdout, "Closed connection\n");
     }
     else{
-      //sname = strtok(0, " ");
-      FILE *fp = fopen(ha, "r");
+      sname = strtok(0, " ");
+      fprintf(stdout, "File %s\n", sname);
+
+      FILE *fp = fopen(sname, "r");
       bzero(buffer, LENGTH);
 
       while((fs_block_sz = fread(buffer, sizeof(char), LENGTH, fp)) > 0)
@@ -111,6 +119,7 @@ int client(){
         if(send(sock, buffer, fs_block_sz, 0) < 0);
         bzero(buffer, LENGTH);
       }
+      fclose(fp);
     }
     close(sock);
   }
