@@ -40,8 +40,10 @@ int server(){
     char fname[] = "/home/doodledron/Documents/Academics/DS/new.txt";
     FILE *fr = fopen(fname, "w");
     //cout<<fw<<endl;
+
     if(!strstr(fw, "Sending")){
-      fprintf(stdout, "Message: %s\n>>", buffer);
+      buffer[strlen(buffer)] = '\0';
+      fprintf(stdout, "\nMessage (Press enter to continue): %s\n>>", buffer);
       bzero(buffer, strlen(buffer));
     }
     else{
