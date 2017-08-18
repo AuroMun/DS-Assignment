@@ -9,7 +9,6 @@
 #include<string>
 int PORT = 8080;
 int PORT2 = 8081;
-int accpt = 0;
 #define LENGTH 100024
 
 using namespace std;
@@ -80,16 +79,12 @@ int server(){
 }
 
 int client(){
-  if(accpt==0)return 0;
   while(1){
     char ha[LENGTH];
     cout<<">>";
-
-    struct sockaddr_in address;
+    struct sockaddr_in address, serv_addr;
     int sock = 0, valread;
-    struct sockaddr_in serv_addr;
-    char *sname;
-    char buffer[LENGTH] = {0};
+    char *sname, buffer[LENGTH] = {0};
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     memset(&serv_addr, '0', sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
@@ -110,12 +105,9 @@ int client(){
     else{
       sname = strtok(0, " ");
       fprintf(stdout, "File %s\n", sname);
-
       FILE *fp = fopen(sname, "r");
       bzero(buffer, LENGTH);
-
-      while((fs_block_sz = fread(buffer, sizeof(char), LENGTH, fp)) > 0)
-      {
+      while((fs_block_sz = fread(buffer, sizeof(char), LENGTH, fp)) > 0){
         if(sendto(sock, buffer, fs_block_sz, 0,(struct sockaddr *)&serv_addr, addr_size) < 0);
         bzero(buffer, LENGTH);
       }
@@ -170,12 +162,10 @@ int udp_server(){
   }
 }
 int main(int argc, char const *argv[]){
-  //int sockfd = socket(domain, type, protocol);
   PORT = atoi(argv[1]);
   PORT2 = atoi(argv[2]);
-  accpt = atoi(argv[3]);
-  thread first(udp_server);
-  thread second(udp_client);
+  thread first(server);
+  thread second(client);
   first.join();
   second.join();
   return 0;
